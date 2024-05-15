@@ -17,8 +17,14 @@ function closeSidebar() {
 // (Your existing JavaScript code for file upload, display, etc. goes here)
 
 var db;
+var dbInitialized = false;
 
 function initDB() {
+    if (dbInitialized) {
+        console.log("Database already initialized.");
+        return;
+    }
+
     var request = window.indexedDB.open('MyDriveDB', 1);
 
     request.onerror = function(event) {
@@ -30,12 +36,16 @@ function initDB() {
         db = event.target.result;
         displayFiles();
         displayTrash();
+        dbInitialized = true;
     };
 
     request.onupgradeneeded = function(event) {
         console.log("Database upgrade needed.");
         var db = event.target.result;
         var filesStore = db.createObjectStore('files', { keyPath: 'id', autoIncrement: true });
+        if (!filesStore.indexNames.contains('name')) {
+            filesStore.createIndex('name', 'name', { unique: false });
+        }
         var trashStore = db.createObjectStore('trash', { keyPath: 'id', autoIncrement: true });
     };
 }
